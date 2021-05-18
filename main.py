@@ -184,7 +184,7 @@ class TypeOrDie(App):
                         switch_screens = True
                         break
                 time.sleep(1)
-                if current_text == scrn.text_i.text:
+                if current_text == scrn.text_i.text and current_text != '':
                     current_idle_period += 1
                     scrn.ids["circular_bar"].value =  current_idle_period
                     # print(f'progress bar position {scrn.ids["circular_bar"].pos}')
