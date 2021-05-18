@@ -1,0 +1,466 @@
+#:import utils kivy.utils
+#:import FadeTransition kivy.uix.screenmanager.FadeTransition
+#:import ew kivy.uix.effectwidget
+#:import CircularProgressBar circular_progress_bar
+#:import Label kivy.core.text.Label
+
+#:set _label Label(text="")
+#:set timer_bar_color utils.get_color_from_hex('#667e9a')
+#:set brown_color utils.get_color_from_hex('#201f1d')
+#:set light_brown utils.get_color_from_hex('#272624')
+#:set blue_color utils.get_color_from_hex('#8bbdf2')
+#:set typing_color utils.get_color_from_hex('#817569')
+
+
+WindowManager:
+    id: screen_manager
+    HomeScreen: 
+    WritingScreen: 
+    WritingFullScreen: 
+
+<HomeScreen>:
+    name: "first"
+    id: home_screen_window
+   
+    BoxLayout:
+        orientation: 'vertical'
+        size: root.width, root.height
+        padding: 50
+        spacing: 50
+
+        FloatLayout:
+            # size: root.width, root.height
+
+            Label:
+                text: "Type or Die!"
+                font_size: 60
+                font_name: 'fonts\OpenSans-Bold'
+                size_hint: (0.3, 0.1)
+                pos_hint: {"x":0.35, "top":0.9}
+                color: blue_color
+            
+            Label:
+                text: "Disappearing text writing app"
+                font_size: 30
+                size_hint: (0.3, 0.1)
+                pos_hint: {"x":0.35, "top":0.76}
+                color: blue_color
+                font_name: 'fonts\OpenSans-Regular'
+
+            Label:
+                text:"---------------------------------------------------------------------------------------------------------------"
+                # font_size: 30
+                # size_hint: (0.3, 0.1)
+                size: (300,10)
+                pos: (45,200)
+                # pos_hint: {"x":0.32, "top":0.69}
+                color: blue_color
+            
+            Label:
+                id: prompt_text
+                text: ''
+                text_size: self.width, self.height
+                size_hint: (None, None)
+                width: 400
+                height: 150
+                padding: 10,10
+                pos: (250,260)
+                halign: 'left'
+                valign: 'middle'
+                # pos_hint: {"x":0.30, "top":0.60}
+                color: blue_color
+                background_color: (0,0,1,1)
+                canvas.before:
+                    Color:
+                        rgba: light_brown
+                    Rectangle:
+                        size: self.size
+                        pos: self.pos #for position
+            CircularProgressBar:
+                id: circular_bar_1
+                # pos_hint: {"top":0.5,"right":0.5}
+                widget_size: 25
+                thickness: 2
+                progress_colour: timer_bar_color
+                pos: 50, 320
+                # pos_hint: {"top":1.943,"right":1.9}
+                max: 10
+                min: 0
+                label: _label
+         
+            Button:
+                id: generate_prompt
+                text: "Generate Prompt"
+                font_size: 15
+                font_name: 'fonts\OpenSans-Regular'
+                background_normal: ''
+                background_color: brown_color
+                color: blue_color
+                # size_hint: (0.3,0.1)
+                size_hint: (None, None)
+                width: 100
+                height: 50
+                pos: (275, 200)
+                # pos_hint: {"center_x":0.5,"top":0.2}
+                background_down: 'images/button-border.png'
+                on_release:root.get_random_prompt(scrn=root.manager.get_screen("first"))
+                Image:
+                    source: 'images/button-border.png'
+                    center_x: self.parent.center_x - 50
+                    center_y: self.parent.center_y
+                    size_hint: (None, None)
+                    width: 200
+                    height:100 
+            Button:
+                id: clear_prompt_button
+                background_normal: ''
+                background_color: brown_color
+                background_down: 'images/button-border.png'
+                size_hint: (None, None)
+                width: 50
+                height: 50
+                pos: (600,200)
+                on_release:
+                    root.ids.prompt_text.text=''
+                Image:
+                    id: clear_text_image
+                    source: 'images/clear_text.png'
+                    center_x: self.parent.center_x
+                    center_y: self.parent.center_y
+                                        
+            Button:
+                text: "Start Writing"
+                font_size: 25
+                font_name: 'fonts\OpenSans-Regular'
+                background_normal: ''
+                background_color: brown_color
+                color: blue_color
+                # size_hint: (0.3,0.1)
+                size_hint: (None, None)
+                width: 200
+                height: 50
+                pos_hint: {"center_x":0.85,"top":0.1}
+                background_down: 'images/button-border.png'
+                on_release:
+                    app.root.current = "second"
+                    root.manager.transition.direction = "left"
+                    root.manager.get_screen("second").ids["restart_button"].pos_hint = {"bottom":1.1,"right":1.1}
+                    root.manager.get_screen("second").ids["text_input"].disabled = False
+                    root.manager.get_screen("second").ids["text_input"].text = root.ids.prompt_text.text
+                    root.manager.get_screen("second").ids["text_input"].focus = True
+                    # root.manager.get_screen("second").run_wait_for_input()
+                    app.typing_timer(scrn=root.manager.get_screen("second"), full_screen=False)
+                Image:
+                    id: rounded_border
+                    source: 'images/button-border.png'
+                    center_x: self.parent.center_x
+                    center_y: self.parent.center_y
+                    size_hint: (None, None)
+                    width: 300
+                    height: 100
+        
+
+<WritingScreen>:
+    name: "second"
+    id: writing_screen_window
+    text_i: text_input
+   
+
+    FloatLayout:
+        # orientation: 'vertical'
+        size: root.width, root.height
+
+        EffectWidget:
+            id: blur_effect
+            background_normal: ''
+            background_active: ''
+            background_color: brown_color
+            effects: {ew.HorizontalBlurEffect(size=0.0)}
+
+            TextInput:
+                id: text_input
+                multiline: True
+                background_normal: ''
+                background_active: ''
+                background_color: brown_color
+                cursor_color: blue_color
+                foreground_color: typing_color
+                size_hint:(0.8,0.8)
+                pos_hint:{"x":0.1,"top":0.9}
+                font_name: 'fonts\OpenSans-Regular'
+                font_size: 20
+
+        Button:
+            id: go_back
+            background_normal: ''
+            background_color: brown_color
+            # text: "Go Back"
+            font_size: 32
+            # size_hint: (0.1,0.1)
+            size_hint: (None, None)
+            width: 50
+            height: 50
+            pos_hint: {"top":0.995,"right":0.07}
+            on_release:
+                app.root.current = "first"
+                root.manager.transition.direction = "right"
+                app.timer_manual_stop()
+            Image:
+                id: back_arrow_image
+                source: 'images/back-arrow.png'
+                center_x: self.parent.center_x
+                center_y: self.parent.center_y
+
+        Button:
+            id: save_button
+            background_normal: ''
+            background_color: brown_color
+            font_size: 32
+            size_hint: (None, None)
+            width: 50
+            height: 50
+            pos_hint: {"top":0.995,"right":0.9}
+            on_release:
+                app.timer_manual_stop()
+                root.ids["text_input"].disabled = True
+                root.ids["restart_button"].pos_hint = {"top": 0.995, "right": 0.86} 
+                root.show_save()
+            Image:
+                id: save_image
+                source: 'images/save.png'
+                center_x: self.parent.center_x
+                center_y: self.parent.center_y
+
+        Button:
+            id: full_screen
+            background_normal: ''
+            background_color: brown_color
+            size_hint: (None, None)
+            width: 50
+            height: 50
+            on_release:
+                root.full_screen()
+                app.root.current = "third"
+                app.root.transition = FadeTransition(duration=0.1)
+                app.typing_timer(scrn=root.manager.get_screen("third"), full_screen=True)
+                # keep the same text in the text entry window when switching to full screen
+                root.manager.get_screen("third").ids["text_input"].text = root.ids.text_input.text
+                root.manager.get_screen("third").ids["text_input"].focus = True
+
+            pos_hint: {"top":0.995,"right":0.995}
+            Image:
+                id: full_screen_image
+                source: 'images/full-screen.png'
+                center_x: self.parent.center_x
+                center_y: self.parent.center_y
+        Button:
+            id: clear_text_button
+            background_normal: ''
+            background_color: brown_color
+            size_hint: (None, None)
+            width: 50
+            height: 50
+            pos_hint: {"bottom":0.995,"right":0.995}
+            on_release:
+                root.ids.text_input.text=''
+            Image:
+                id: clear_text_image
+                source: 'images/clear_text.png'
+                center_x: self.parent.center_x
+                center_y: self.parent.center_y
+        
+        Button:
+            id: restart_button
+            background_normal: ''
+            background_color: brown_color
+            size_hint: (None, None)
+            width: 50
+            height: 50
+            pos_hint: {"bottom":1.1,"right":1.1}
+            on_release:
+                root.ids["text_input"].disabled = False
+                app.typing_timer(scrn=root.manager.get_screen("second"), full_screen=False)
+                self.pos_hint = {"bottom":1.1,"right":1.1}
+                root.ids["text_input"].text = ''
+                root.ids["text_input"].focus = True
+            Image:
+                id: clear_text_image
+                source: 'images/restart.png'
+                center_x: self.parent.center_x
+                center_y: self.parent.center_y
+
+
+        CircularProgressBar:
+            id: circular_bar
+            # pos_hint: {"top":0.5,"right":0.5}
+            widget_size: 25
+            thickness: 2
+            progress_colour: timer_bar_color
+            # pos: 300, 300
+            pos_hint: {"top":1.943,"right":1.9}
+            max: 10
+            min: 0
+            label: _label
+
+<WritingFullScreen>
+    name: "third"
+    id: full_screen_window
+    text_i: text_input
+    
+    FloatLayout:
+        size: root.width, root.height
+
+        EffectWidget:
+            id: blur_effect
+            background_normal: ''
+            background_active: ''
+            background_color: brown_color
+            effects: {ew.HorizontalBlurEffect(size=0.0)}
+
+            TextInput:
+                id: text_input
+                multiline: True
+                background_normal: ''
+                background_active: ''
+                background_color: brown_color
+                cursor_color: blue_color
+                foreground_color: typing_color
+                size_hint:(0.8,0.8)
+                pos_hint:{"x":0.1,"top":0.9}
+                font_name: 'fonts\OpenSans-Regular'
+                font_size: 20
+
+        Button:
+            id: exit_full_screen
+            background_normal: ''
+            background_color: brown_color
+            size_hint: (None, None)
+            width: 50
+            height: 50
+            on_release:
+                root.exit_full_screen()
+                app.root.current = "second"
+                app.root.transition = FadeTransition(duration=0.1)
+                app.typing_timer(scrn=root.manager.get_screen("second"), full_screen=False)
+                # keep the same text in the text entry window when switching to full screen
+                root.manager.get_screen("second").ids["text_input"].text = root.ids.text_input.text
+                root.manager.get_screen("second").ids["text_input"].focus = True
+            pos_hint: {"top":0.995,"right":0.995}
+            Image:
+                id: exit_full_screen_image
+                source: 'images/exit-full-screen.png'
+                center_x: self.parent.center_x
+                center_y: self.parent.center_y
+
+        Button:
+            id: go_back
+            background_normal: ''
+            background_color: brown_color
+            # text: "Go Back"
+            font_size: 32
+            # size_hint: (0.1,0.1)
+            size_hint: (None, None)
+            width: 50
+            height: 50
+            pos_hint: {"top":0.995,"right":0.05}
+            on_release:
+                root.exit_full_screen()
+                app.root.current = "first"
+                root.manager.transition.direction = "right"
+                root.manager.get_screen("second").ids["text_input"].text = root.ids.text_input.text
+                app.timer_manual_stop()
+            Image:
+                id: back_arrow_image
+                source: 'images/back-arrow.png'
+                center_x: self.parent.center_x
+                center_y: self.parent.center_y
+        Button:
+            id: clear_text_button
+            background_normal: ''
+            background_color: brown_color
+            size_hint: (None, None)
+            width: 50
+            height: 50
+            pos_hint: {"bottom":0.995,"right":0.995}
+            on_release:
+                root.ids.text_input.text=''
+            Image:
+                id: clear_text_image
+                source: 'images/clear_text.png'
+                center_x: self.parent.center_x
+                center_y: self.parent.center_y
+        Button:
+            id: exit_full_screen_hidden
+            # background_normal: ''
+            # background_color: brown_color
+            size_hint: (None, None)
+            width: 1
+            height: 1
+            pos_hint: {"bottom":1.1,"right":1.1}
+            on_release:
+                root.exit_full_screen()
+                app.root.current = "second"
+                app.root.transition = FadeTransition(duration=0.1)
+                root.manager.get_screen("second").ids["text_input"].text = root.ids.text_input.text
+                root.manager.get_screen("second").ids["blur_effect"].effects = {ew.HorizontalBlurEffect(size=10)}
+                root.manager.get_screen("second").ids["restart_button"].pos_hint = {"top":0.995,"right":0.86}
+                # root.manager.get_screen("second").ids["save_image"].source = "images/save_blue.png"
+                # root.manager.get_screen("second").ids["text_input"].focus = True
+                root.manager.get_screen("second").ids["save_button"].trigger_action(0.1)
+
+        CircularProgressBar:
+            id: circular_bar
+            # pos_hint: {"top":0.5,"right":0.5}
+            widget_size: 25
+            thickness: 2
+            progress_colour: timer_bar_color
+            # pos: 300, 300
+            pos_hint: {"top":1.963,"right":1.955}
+            max: 10
+            min: 1
+            label: _label
+
+
+
+
+
+
+# TODO Remove the code below if I end up never using it
+<RoundedButton@Button>
+    background_color: (0,0,0,0)
+    background_normal: ''
+    canvas.before:
+        Color:
+            rgba: (139/255,189/255,242/255,1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [25]
+
+<SaveDialog>:
+    text_input: text_input
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        FileChooserListView:
+            id: filechooser
+            on_selection: text_input.text = self.selection and self.selection[0] or ''
+
+        TextInput:
+            id: text_input
+            size_hint_y: None
+            height: 30
+            multiline: False
+            # text: 'my-story.txt'
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_release: root.cancel()
+
+            Button:
+                text: "Save"
+                on_release: root.save(filechooser.path, text_input.text)
